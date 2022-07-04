@@ -1,0 +1,7 @@
+<launch>
+
+	
+	<node name="run_node" pkg="vtol_offb" type="offb_node" output="screen" />
+
+
+</launch>
