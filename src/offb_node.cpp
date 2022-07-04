@@ -8,7 +8,21 @@ mavros_msgs::State current_state;
 void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
 }
+void takeoff(const float height,  geometry_msgs::PoseStamped &_pose, ros::Publisher &_local_pos_pub) {
+	ROS_INFO("Initiating takeoff %.2fm", height);
 
+    _pose.pose.position.x = 0;
+    _pose.pose.position.y = 0;
+	_pose.pose.position.z = height;
+
+	ros::Rate rate(20);
+
+	for(int i = 5; ros::ok() && i > 0; --i){
+		_local_pos_pub.publish(_pose);
+		ros::spinOnce();
+		rate.sleep();
+	}
+}
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "offb_node");
@@ -33,16 +47,17 @@ int main(int argc, char **argv)
     }
 
     geometry_msgs::PoseStamped pose;
-    pose.pose.position.x = 0;
-    pose.pose.position.y = 0;
-    pose.pose.position.z = 2;
+    takeoff(5, pose, local_pos_pub);
+    // pose.pose.position.x = 0;
+    // pose.pose.position.y = 0;
+    // pose.pose.position.z = 2;
 
-    //send a few setpoints before starting
-    for(int i = 100; ros::ok() && i > 0; --i){
-        local_pos_pub.publish(pose);
-        ros::spinOnce();
-        rate.sleep();
-    }
+    // //send a few setpoints before starting
+    // for (int i = 10; ros::ok() && i > 0; --i){
+    //     local_pos_pub.publish(pose);
+    //     ros::spinOnce();
+    //     rate.sleep();
+    // }
 
     mavros_msgs::SetMode offb_set_mode;
     offb_set_mode.request.custom_mode = "OFFBOARD";
@@ -51,31 +66,51 @@ int main(int argc, char **argv)
     arm_cmd.request.value = true;
 
     ros::Time last_request = ros::Time::now();
-
     while(ros::ok()){
-        if( current_state.mode != "OFFBOARD" &&
-            (ros::Time::now() - last_request > ros::Duration(5.0))){
-            if( set_mode_client.call(offb_set_mode) &&
+        if(current_state.mode != "OFFBOARD"){
+            if(set_mode_client.call(offb_set_mode) &&
                 offb_set_mode.response.mode_sent){
-                ROS_INFO("Offboard enabled");
-            }
-            last_request = ros::Time::now();
-        } else {
-            if( !current_state.armed &&
-                (ros::Time::now() - last_request > ros::Duration(5.0))){
+                ROS_INFO_ONCE("Offboard enabled");
+                }
+        }
+        
+        else {
+            if (!current_state.armed){
                 if( arming_client.call(arm_cmd) &&
                     arm_cmd.response.success){
-                    ROS_INFO("Vehicle armed");
+                    ROS_INFO_ONCE("Vehicle armed");
                 }
-                last_request = ros::Time::now();
             }
         }
-
         local_pos_pub.publish(pose);
 
         ros::spinOnce();
         rate.sleep();
     }
+    // while(ros::ok()){
+    //     if( current_state.mode != "OFFBOARD" &&
+    //         (ros::Time::now() - last_request > ros::Duration(5.0))){
+    //         if( set_mode_client.call(offb_set_mode) &&
+    //             offb_set_mode.response.mode_sent){
+    //             ROS_INFO("Offboard enabled");
+    //         }
+    //         last_request = ros::Time::now();
+    //     } else {
+    //         if( !current_state.armed &&
+    //             (ros::Time::now() - last_request > ros::Duration(5.0))){
+    //             if( arming_client.call(arm_cmd) &&
+    //                 arm_cmd.response.success){
+    //                 ROS_INFO("Vehicle armed");
+    //             }
+    //             last_request = ros::Time::now();
+    //         }
+    //     }
+
+    //     local_pos_pub.publish(pose);
+
+    //     ros::spinOnce();
+    //     rate.sleep();
+    // }
 
     return 0;
 }
