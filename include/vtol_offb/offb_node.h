@@ -21,8 +21,10 @@ class VTOLAPI {
     ~VTOLAPI(); // DESTRUCTOR
 
     void takeoff(const float h);
-    void point_move(const float h, const float x, const float y, geometry_msgs::PoseStamped &_pose, ros::Publisher &_local_pos_pub);
+    void point_move(const float x, const float y, const float z);
     void arm();
+    void land();
+    void offboard();
     void local_pos_pose_cb(const geometry_msgs::PoseStamped& pose);
     bool height_criterion(const float& h);
     float x_now, y_now,z_now;
