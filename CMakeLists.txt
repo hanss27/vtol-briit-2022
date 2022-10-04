@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(vtol_offb)
+project(briit)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -131,6 +131,9 @@ include_directories(
   #   src/vtol_offb.cpp
   # )
 
+add_library(${PROJECT_NAME}
+    src/vtol_api.cpp
+ )
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -140,10 +143,15 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/vtol_offb_node.cpp)
-add_executable(offb_node 
-  src/offb_node.cpp)
-target_link_libraries( offb_node
+
+target_link_libraries( ${PROJECT_NAME} 
+  
   ${catkin_LIBRARIES})
+
+add_executable(offb_node 
+  src/run.cpp)
+target_link_libraries(offb_node 
+  ${PROJECT_NAME})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
