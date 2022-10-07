@@ -3,7 +3,7 @@
 
 int main(int argc, char **argv){
 
-  ros::init(argc, argv, "offb_node");
+  ros::init(argc, argv, "run_node");
   ros::NodeHandle nh;
   ros::Rate rate(30);
   VTOLAPI copter(nh, rate);

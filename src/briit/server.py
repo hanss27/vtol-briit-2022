@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import rospy
 from std_msgs.msg import String
-from geometry_msgs.msg import Point
-from sensor_msgs.msg import NavSatFix
 import requests
 from briit.msg import GPSCoordinate
 
@@ -27,7 +25,7 @@ class ServerBRIIT():
             conn_data_hb = connection.json()
             if conn_data_hb == 'OK':
                 self.status = True
-                self.server_status.publish(conn_data_hub)
+                self.server_status.publish(conn_data_hb)
             else:
                 self.status = False
                 self.server_status.publish("Not OK")
