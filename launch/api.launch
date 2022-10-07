@@ -7,6 +7,6 @@
 	<rosparam param="mavros/fcu_url">/dev/ttyACM0:115200</rosparam>
 	
 	<node name="run_node" pkg="briit" type="run_node" output="screen" />
-
+	<node name="server" pkg="briit" type="server"  output="screen"/>
 
 </launch>

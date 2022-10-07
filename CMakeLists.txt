@@ -10,6 +10,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   mavros
   roscpp
+  rospy
   roslaunch
   geometry_msgs
   mavros_msgs
@@ -151,6 +152,12 @@ add_executable(run_node
   src/run.cpp)
 target_link_libraries(run_node 
   ${PROJECT_NAME})
+
+catkin_install_python(PROGRAMS
+  src/server/server.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
