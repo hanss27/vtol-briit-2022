@@ -56,7 +56,7 @@ add_message_files(
   FILES
   GPSCoordinate.msg
 )
-
+generate_messages(DEPENDENCIES std_msgs)
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
@@ -141,15 +141,15 @@ add_library(${PROJECT_NAME}
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/vtol_offb_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/vtol_run_node.cpp)
 
 target_link_libraries( ${PROJECT_NAME} 
   
   ${catkin_LIBRARIES})
 
-add_executable(offb_node 
+add_executable(run_node 
   src/run.cpp)
-target_link_libraries(offb_node 
+target_link_libraries(run_node 
   ${PROJECT_NAME})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -188,7 +188,7 @@ target_link_libraries(offb_node
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-  install(TARGETS offb_node
+  install(TARGETS run_node
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}

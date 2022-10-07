@@ -39,16 +39,21 @@ class ServerBRIIT():
     def triggerDrone(self):
         try:
             connection = requests.get(url+drone_endpoint,data={'deviceid':self.device_id})
-            constatus = connection.status_code
+            connstatus = connection.status_code
             if connstatus == 200:
                 if connection.text.find("is empty") == -1:
                     self.coordinate.lat = connection.json()['data']['lat']
                     self.coordinate.alt = connection.json()['data']['alt']
-                    self.coordinate.long = connection.json()['data']['long']
+                    self.coordinate.longitude = connection.json()['data']['long']
+                    self.coordinate.command = connection.json()['command']
                 else:
-                    ros.loginfo("No Data!")
+                    self.coordinate.lat = 0.0
+                    self.coordinate.alt = 0.0
+                    self.coordinate.longitude = 0.0
+                    self.coordinate.command = 0
+                    rospy.loginfo("No Data!")
             else:
-                ros.loginfo("No WiFi!")
+                rospy.loginfo("No WiFi!")
         except Exception as e:
             self.msg = str(e)
             self.error = True

@@ -23,7 +23,7 @@
 #include "sensor_msgs/NavSatFix.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64.h"
-
+#include "briit/GPSCoordinate.h" 
 #include <math.h>
 
 #define R_earth 6378137 // in meters
@@ -34,7 +34,7 @@
 
 class VTOLAPI {
   public:
-    VTOLAPI(ros::NodeHandle& nh); // CONSTRUCTOR
+    VTOLAPI(ros::NodeHandle& nh, ros::Rate& rate); // CONSTRUCTOR
     ~VTOLAPI(); // DESTRUCTOR
 
     // Movement
@@ -49,6 +49,7 @@ class VTOLAPI {
     void local_pos_pose_cb(const geometry_msgs::PoseStamped& data);
     void vel_cb(const geometry_msgs::TwistStamped& data);
 
+
     // Waypoints
     void waypoint_reached_cb(const mavros_msgs::WaypointReached& wp_reached);
     void waypoint_cb(const mavros_msgs::WaypointList& data);
@@ -56,10 +57,13 @@ class VTOLAPI {
     void insert_wp(const int& _wp_num, const mavros_msgs::Waypoint& _wp);
     void erase_wp(const int& _wp_num);
     void swap_wp(const int& _wp_num, const mavros_msgs::Waypoint& _wp);
+
     
     // GPS
     void gps_cb(const sensor_msgs::NavSatFix& data);
     void gps_hdg_cb(const std_msgs::Float64& data);
+    void server_cb(const briit::GPSCoordinate& data);
+
 
     // MAVROS STATE
     void state_cb(const mavros_msgs::State& msg);
@@ -75,21 +79,26 @@ class VTOLAPI {
 
 
     bool conn_state,armed_state,guided_state, manual_state;
-    double gps_long, gps_lat;
-    float gps_hdg, pos_x, pos_y, pos_z;
+    double gps_long, gps_lat,alt,gps_long_trgt, gps_lat_trgt; 
+    bool cmd_state;
+    float gps_hdg, pos_x, pos_y, pos_z, alt_trgt;
     std::string mode_state;
 
   private:
+    ros::NodeHandle _nh;
+    ros::Rate _rate;
+
     std::string current_state;
 
     // Subscriber
     ros::Subscriber waypoint_list_sub ;
     ros::Subscriber waypoint_reached_sub;
-    ros::Subscriber gps_coor_sub;
+    ros::Subscriber server_sub;
     ros::Subscriber gps_hdg_sub;
     ros::Subscriber vel_sub;
     ros::Subscriber state_sub;
     ros::Subscriber local_pos_pose_sub;
+    ros::Subscriber gps_coor_sub;
 
     // Service Client
     ros::ServiceClient command_arm_cli;
