@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import rospy
 from std_msgs.msg import String
 import requests
@@ -10,7 +9,7 @@ image_flag_endpoint = "/flag/image-to-json" # METHOD POST
 house_flag_endpoint = "/house/image-to-json" # METHOD POST
 drone_endpoint = "/drone" # METHODE GET (TRIGGER)
 
-class ServerBRIIT():
+class server_node:
     def __init__(self,device_id):
         self.device_id = device_id
         self.coordinate = GPSCoordinate()

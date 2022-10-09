@@ -6,7 +6,7 @@ VTOLAPI::VTOLAPI(ros::NodeHandle& nh, ros::Rate& rate) : _nh(nh), _rate(rate) {
   gps_coor_sub = _nh.subscribe("/mavros/global_position/global", 1, &VTOLAPI::gps_cb, this);
   gps_hdg_sub = _nh.subscribe("/mavros/global_position/compass_hdg", 1, &VTOLAPI::gps_hdg_cb, this);
   local_pos_pose_sub = _nh.subscribe("/mavros/local_position/pose", 1, &VTOLAPI::local_pos_pose_cb, this);
-  server_sub = _nh.subscribe("/briit/position_user",10, &VTOLAPI::server_cb, this);
+  //server_sub = _nh.subscribe("/briit/position_user",10, &VTOLAPI::server_cb, this);
   command_arm_cli = _nh.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
   while(ros::ok() && !conn_state) {
 		ROS_INFO_THROTTLE(4, "Waiting for FCU connection");
@@ -59,14 +59,14 @@ void VTOLAPI::arm(){
 		ROS_WARN("Arm failed");
 	}
 }
-
+/*
 void VTOLAPI::server_cb(const briit::GPSCoordinate& data){
 	gps_lat_trgt = data.lat;  
 	gps_long_trgt = data.longitude;
 	alt_trgt = data.alt;
 	cmd_state = data.command;
 }
-
+*/
 void VTOLAPI::disarm(){
 	mavros_msgs::CommandBool disarm_cmd;
     disarm_cmd.request.value = false;

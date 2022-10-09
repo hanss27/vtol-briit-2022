@@ -110,7 +110,6 @@ class VTOLAPI {
      // Publisher 
     ros::Publisher setpoint_position_pub;
     ros::Publisher setpoint_velocity_pub;
-    ros::Publisher local_pos_pub;
     ros::Publisher fcu_state_pub;
 
 };
