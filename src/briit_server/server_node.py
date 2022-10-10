@@ -9,7 +9,7 @@ image_flag_endpoint = "/flag/image-to-json" # METHOD POST
 house_flag_endpoint = "/house/image-to-json" # METHOD POST
 drone_endpoint = "/drone" # METHODE GET (TRIGGER)
 
-class server_node:
+class ServerNode:
     def __init__(self,device_id):
         self.device_id = device_id
         self.coordinate = GPSCoordinate()
