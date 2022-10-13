@@ -14,7 +14,7 @@
 #include "mavros_msgs/CommandCode.h"
 #include "mavros_msgs/CommandBool.h"
 #include "mavros_msgs/CommandTOL.h"
-
+#include "mavros_msgs/CommandLong.h"
 #include "mavros_msgs/State.h"
 #include "mavros_msgs/StreamRate.h"
 #include "mavros_msgs/Altitude.h"
@@ -69,6 +69,8 @@ class VTOLAPI {
     void gps_hdg_cb(const std_msgs::Float64& data);
     void server_cb(const briit::GPSCoordinate& data);
 
+    // Tilt
+    void servo_tilt(const bool servo);
 
     // MAVROS STATE
     void state_cb(const mavros_msgs::State& msg);
@@ -113,6 +115,7 @@ class VTOLAPI {
     ros::ServiceClient waypoint_pull_cli;
     ros::ServiceClient waypoint_push_cli; 
     ros::ServiceClient command_land_cli;
+    ros::ServiceClient servo_cli;
      // Publisher 
     ros::Publisher setpoint_position_pub;
     ros::Publisher setpoint_velocity_pub;

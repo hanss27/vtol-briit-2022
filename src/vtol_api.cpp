@@ -10,6 +10,8 @@ VTOLAPI::VTOLAPI(ros::NodeHandle& nh, ros::Rate& rate) : _nh(nh), _rate(rate) {
 	command_arm_cli = _nh.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
 	command_tkoff_cli = _nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
 	command_land_cli = _nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
+    servo_cli = nh.serviceClient<mavros_msgs::CommandLong>("/mavros/cmd/command");
+
 	setpoint_position_pub = _nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
 	setpoint_global_pub = _nh.advertise<geographic_msgs::GeoPoseStamped>("mavros/setpoint_position/global", 10);
 
@@ -77,6 +79,8 @@ void VTOLAPI::server_cb(const briit::GPSCoordinate& data){
 	cmd_state = data.command;
 }
 */
+
+
 void VTOLAPI::disarm(){
 	mavros_msgs::CommandBool disarm_cmd;
     disarm_cmd.request.value = false;
@@ -104,7 +108,6 @@ void VTOLAPI::point_move(const float x, const float y, const float z){
       float deltaX = abs(pos_x- x);
       float deltaY = abs(pos_y - y);
       float deltaZ = abs(pos_z - z);
-      //cout << " dx " << deltaX << " dy " << deltaY << " dz " << deltaZ << endl;
       float dMag = sqrt( pow(deltaX, 2) + pow(deltaY, 2) + pow(deltaZ, 2) );
       //ROS_INFO("Mag: %f", dMag);
 	  if( dMag < tolerance)
@@ -163,6 +166,33 @@ void VTOLAPI::global_move(const float latitude, const float longitude, const flo
 
 void VTOLAPI::guided(){
 }
+
+void VTOLAPI::servo_tilt(const bool servo){
+	mavros_msgs::CommandLong servo_msg;
+	servo_msg.request.command = 183; //MAV_CMD_DO_SET_SERVO
+	servo_msg.request.param1 = 10; // Check in Ardupilot
+	if (servo){
+		servo_msg.request.param2 = 2000; // PWM
+	}
+	else{
+		servo_msg.request.param2 = 1100; // PWM
+	}
+
+	if (servo_cli.call(servo_msg) && servo){
+		ROS_INFO("VTOL mode Activated");
+	}
+	else if (servo_cli.call(servo_msg) && !servo){
+		ROS_INFO("Fixed Wing Mode Activated");
+	}
+	else {
+		ROS_INFO("Failed to Set Servo");
+	}
+	
+	
+
+
+}
+
 
 void VTOLAPI::takeoff(const float h){
  float tolerance = 0.52;

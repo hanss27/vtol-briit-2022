@@ -71,12 +71,21 @@ target_link_libraries(run_node
 add_dependencies(run_node
   briit_generate_messages_cpp)
 
+  add_executable(test_servo 
+  src/test/test_servo.cpp)
+target_link_libraries(test_servo 
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES})
+add_dependencies(test_servo
+  briit_generate_messages_cpp)
+
+
 catkin_install_python(PROGRAMS
   src/run_server.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(TARGETS run_node
+install(TARGETS run_node test_servo
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
