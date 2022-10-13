@@ -24,7 +24,7 @@ class ServerNode:
             self.conn_data_hb = connection.json()            
         except Exception as e:
             self.msg = str(e)
-            rospy.log_info("Error: {}".format(str(e)))
+            rospy.loginfo("Error: {}".format(str(e)))
             self.server_status.publish(self.msg)
             self.error = True
             return False
