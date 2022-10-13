@@ -2,15 +2,17 @@
 
 // CONSTRUCTOR //
 VTOLAPI::VTOLAPI(ros::NodeHandle& nh, ros::Rate& rate) : _nh(nh), _rate(rate) {
-  state_sub = _nh.subscribe("/mavros/state", 10, &VTOLAPI::state_cb, this);
-  gps_coor_sub = _nh.subscribe("/mavros/global_position/global", 1, &VTOLAPI::gps_cb, this);
-  gps_hdg_sub = _nh.subscribe("/mavros/global_position/compass_hdg", 1, &VTOLAPI::gps_hdg_cb, this);
-  local_pos_pose_sub = _nh.subscribe("/mavros/local_position/pose", 1, &VTOLAPI::local_pos_pose_cb, this);
-  //server_sub = _nh.subscribe("/briit/position_user",10, &VTOLAPI::server_cb, this);
-  command_arm_cli = _nh.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
-  command_tkoff_cli = nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
-  command_land_cli = nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
-	setpoint_position_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
+	state_sub = _nh.subscribe("/mavros/state", 10, &VTOLAPI::state_cb, this);
+	gps_coor_sub = _nh.subscribe("/mavros/global_position/global", 1, &VTOLAPI::gps_cb, this);
+	gps_hdg_sub = _nh.subscribe("/mavros/global_position/compass_hdg", 1, &VTOLAPI::gps_hdg_cb, this);
+	local_pos_pose_sub = _nh.subscribe("/mavros/local_position/pose", 1, &VTOLAPI::local_pos_pose_cb, this);
+	//server_sub = _nh.subscribe("/briit/position_user",10, &VTOLAPI::server_cb, this);
+	command_arm_cli = _nh.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
+	command_tkoff_cli = _nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
+	command_land_cli = _nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
+	setpoint_position_pub = _nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
+	setpoint_global_pub = _nh.advertise<geographic_msgs::GeoPoseStamped>("mavros/setpoint_position/global", 10);
+
 	while (!ros::ok){
 
 		ROS_INFO_THROTTLE(4, "Waiting for FCU connection");
@@ -36,6 +38,7 @@ void VTOLAPI::state_cb(const mavros_msgs::State &msg){
 void VTOLAPI::gps_cb(const sensor_msgs::NavSatFix& data){
 	gps_long = data.longitude;
 	gps_lat = data.latitude;
+	gps_alt = data.altitude;
 }
 
 void VTOLAPI::gps_hdg_cb(const std_msgs::Float64& data){
@@ -97,14 +100,7 @@ void VTOLAPI::point_move(const float x, const float y, const float z){
     {
 
       setpoint_position_pub.publish(setpoint_pos);
-      // float percentErrorX = abs((pose.pose.position.x - current_pose.pose.position.x)/(pose.pose.position.x));
-      // float percentErrorY = abs((pose.pose.position.y - current_pose.pose.position.y)/(pose.pose.position.y));
-      // float percentErrorZ = abs((pose.pose.position.z - current_pose.pose.position.z)/(pose.pose.position.z));
-      // cout << " px " << percentErrorX << " py " << percentErrorY << " pz " << percentErrorZ << endl;
-      // if(percentErrorX < tollorance && percentErrorY < tollorance && percentErrorZ < tollorance)
-      // {
-      //   break;
-      // }
+
       float deltaX = abs(pos_x- x);
       float deltaY = abs(pos_y - y);
       float deltaZ = abs(pos_z - z);
@@ -127,7 +123,41 @@ void VTOLAPI::point_move(const float x, const float y, const float z){
 
    
 
- 
+void VTOLAPI::global_move(const float latitude, const float longitude, const float altitude){
+	geographic_msgs::GeoPoseStamped setpoint_glo;
+	ROS_INFO("Moving to Lat:%f, Long:%f, Alt: %f", latitude, longitude, altitude);
+
+	setpoint_glo.pose.position.latitude = latitude;
+	setpoint_glo.pose.position.longitude = longitude;
+	setpoint_glo.pose.position.altitude = altitude;
+    float tolerance = 0.1;
+	for (int i = 10000; ros::ok() && i > 0; --i)
+		{
+
+		setpoint_global_pub.publish(setpoint_glo);
+
+		float deltaX = abs(gps_alt- altitude);
+		float deltaY = abs(gps_lat - latitude);
+		float deltaZ = abs(gps_long - longitude);
+		//cout << " dx " << deltaX << " dy " << deltaY << " dz " << deltaZ << endl;
+		float dMag = sqrt( pow(deltaX, 2) + pow(deltaY, 2) + pow(deltaZ, 2) );
+		//ROS_INFO("Mag: %f", dMag);
+		ROS_INFO("MAG %f", dMag);
+		if( dMag < tolerance)
+		{
+			break;
+		}
+		if (deltaX < 0.1 && deltaY < 0.1 && deltaZ < 0.1){break;}
+		ros::spinOnce();
+		ros::Duration(0.5).sleep();
+		if(i == 1)
+		{
+			ROS_INFO("Failed to reach destination. Stepping to next task.");
+		}
+		}
+	ROS_INFO("Moved to Lat:%f, Long:%f, Alt: %f", latitude, longitude, altitude);
+
+}
 
 
 

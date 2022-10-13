@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   mavros_msgs
   sensor_msgs
+  geographic_msgs
   nav_msgs
   std_msgs
 )
@@ -43,6 +44,7 @@ catkin_package(
   rospy
   std_msgs
   geometry_msgs
+  geographic_msgs
   sensor_msgs
 )
 

@@ -18,8 +18,11 @@
 #include "mavros_msgs/State.h"
 #include "mavros_msgs/StreamRate.h"
 #include "mavros_msgs/Altitude.h"
+#include "mavros_msgs/GlobalPositionTarget.h"
+
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/TwistStamped.h"
+#include "geographic_msgs/GeoPoseStamped.h"
 #include "sensor_msgs/NavSatFix.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64.h"
@@ -39,6 +42,8 @@ class VTOLAPI {
 
     // Movement
     void point_move(const float x, const float y, const float z);
+    void global_move(const float latitude, const float longitude, const float altitude);
+
     void land(); 
     void arm();
     void disarm();
@@ -79,7 +84,8 @@ class VTOLAPI {
 
 
     bool conn_state,armed_state,guided_state, manual_state;
-    double gps_long, gps_lat,alt,gps_long_trgt, gps_lat_trgt; 
+    float gps_long, gps_lat,gps_alt;
+    double gps_long_trgt, gps_lat_trgt; 
     bool cmd_state;
     float gps_hdg, pos_x = 0, pos_y = 0, pos_z = 0, alt_trgt;
     std::string mode_state;
@@ -110,6 +116,7 @@ class VTOLAPI {
      // Publisher 
     ros::Publisher setpoint_position_pub;
     ros::Publisher setpoint_velocity_pub;
+    ros::Publisher setpoint_global_pub;
     ros::Publisher fcu_state_pub;
 
 };
