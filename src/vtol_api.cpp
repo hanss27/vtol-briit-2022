@@ -8,12 +8,17 @@ VTOLAPI::VTOLAPI(ros::NodeHandle& nh, ros::Rate& rate) : _nh(nh), _rate(rate) {
   local_pos_pose_sub = _nh.subscribe("/mavros/local_position/pose", 1, &VTOLAPI::local_pos_pose_cb, this);
   //server_sub = _nh.subscribe("/briit/position_user",10, &VTOLAPI::server_cb, this);
   command_arm_cli = _nh.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
-  while(ros::ok() && !conn_state) {
+  command_tkoff_cli = nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
+  command_land_cli = nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
+	setpoint_position_pub = nh.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 10);
+	while (!ros::ok){
+
 		ROS_INFO_THROTTLE(4, "Waiting for FCU connection");
 		ros::spinOnce();
 		ros::Duration(0.1).sleep();
 	}
   ROS_INFO("Heartbeat Found! FCU connection established");
+  ros::Duration(5).sleep();
 }
 
 // DESTRUCTOR //
@@ -47,7 +52,7 @@ void VTOLAPI::arm(){
 	mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
 
-	while(ros::ok() && !cmd_state){
+	while(!ros::ok() ){
 		ROS_INFO_THROTTLE(4, "Waiting for arm command");
 		ros::spinOnce();
 		_rate.sleep();
@@ -58,6 +63,8 @@ void VTOLAPI::arm(){
 	else {
 		ROS_WARN("Arm failed");
 	}
+	ros::Duration(3).sleep();
+
 }
 /*
 void VTOLAPI::server_cb(const briit::GPSCoordinate& data){
@@ -78,20 +85,64 @@ void VTOLAPI::disarm(){
 	}
 }
 
+void VTOLAPI::point_move(const float x, const float y, const float z){
+	geometry_msgs::PoseStamped setpoint_pos;
+	float r_pos_to_dest,tolerance =0.2;
+	ROS_INFO("Moving to %f, %f, %f", x, y, z);
+	//setpoint_position.header.seq = seq_count;
+    setpoint_pos.pose.position.x = x;
+    setpoint_pos.pose.position.y = y;
+    setpoint_pos.pose.position.z = z;
+	for (int i = 10000; ros::ok() && i > 0; --i)
+    {
+
+      setpoint_position_pub.publish(setpoint_pos);
+      // float percentErrorX = abs((pose.pose.position.x - current_pose.pose.position.x)/(pose.pose.position.x));
+      // float percentErrorY = abs((pose.pose.position.y - current_pose.pose.position.y)/(pose.pose.position.y));
+      // float percentErrorZ = abs((pose.pose.position.z - current_pose.pose.position.z)/(pose.pose.position.z));
+      // cout << " px " << percentErrorX << " py " << percentErrorY << " pz " << percentErrorZ << endl;
+      // if(percentErrorX < tollorance && percentErrorY < tollorance && percentErrorZ < tollorance)
+      // {
+      //   break;
+      // }
+      float deltaX = abs(pos_x- x);
+      float deltaY = abs(pos_y - y);
+      float deltaZ = abs(pos_z - z);
+      //cout << " dx " << deltaX << " dy " << deltaY << " dz " << deltaZ << endl;
+      float dMag = sqrt( pow(deltaX, 2) + pow(deltaY, 2) + pow(deltaZ, 2) );
+      //ROS_INFO("Mag: %f", dMag);
+	  if( dMag < tolerance)
+      {
+        break;
+      }
+      ros::spinOnce();
+      ros::Duration(0.5).sleep();
+      if(i == 1)
+      {
+        ROS_INFO("Failed to reach destination. Stepping to next task.");
+      }
+    }
+	ROS_INFO("Finished Moving to %f, %f, %f", x, y, z);
+}	
+
+   
+
+ 
+
 
 
 void VTOLAPI::guided(){
-
 }
-void VTOLAPI::takeoff(const float h){
- float tolerance = 0.5;
-  float z_pos_to_dest;
 
+void VTOLAPI::takeoff(const float h){
+ float tolerance = 0.52;
+   VTOLAPI::arm();
   int counter = 0;
 
   mavros_msgs::CommandTOL takeoff_msg;
 	takeoff_msg.request.yaw = 0;
 	takeoff_msg.request.altitude = h;
+
 	if(command_tkoff_cli.call(takeoff_msg)) {
 		ROS_INFO("Initiating TAKEOFF");
 	}
@@ -103,8 +154,8 @@ void VTOLAPI::takeoff(const float h){
 
 	while(ros::ok()) {
 		counter++;
-		
-		if((pos_z > (h - tolerance)) || (counter > 50)) {
+		//ROS_INFO("POS Z: %f", pos_z);
+		if((pos_z > (h - tolerance)) || (counter > 2000)) {
 		ROS_INFO("TAKEOFF completed");
 		return;
 		}
@@ -112,6 +163,38 @@ void VTOLAPI::takeoff(const float h){
 		ros::spinOnce();
 		_rate.sleep();
 	}	
+}
+
+void VTOLAPI::land(){
+  const float h = 0;
+  float tolerance = 0.10;
+  int counter = 0;
+
+  mavros_msgs::CommandTOL land_msg;
+	land_msg.request.yaw = 0;
+	land_msg.request.altitude = h;
+
+	if(command_land_cli.call(land_msg) && land_msg.response.success) {
+		ROS_INFO("Initiating LAND");
+	}
+	else {
+		ROS_ERROR("LAND failed");
+	}
+
+	//sleep(7);
+
+	while(ros::ok()) {
+		ROS_INFO("POS Z: %f", pos_z);
+
+		if((pos_z <  (tolerance)) || (counter > 2000)) {
+		ROS_INFO("LAND completed");
+		return;
+		}
+		
+		ros::spinOnce();
+		_rate.sleep();
+	}	
+	VTOLAPI::disarm();
 }
 
 

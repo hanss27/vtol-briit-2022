@@ -17,21 +17,25 @@ class ServerNode:
         self.msg = "No Message"
         self.server_status = rospy.Publisher("/briit/server_status",String,queue_size=10)
         self.position_user = rospy.Publisher("/briit/position_user",GPSCoordinate,queue_size=10)
-    
+        self.conn_data_hb = "Not OK"
     def getHeartBeat(self):
         try:
             connection = requests.get(url+health_endpoint)
-            conn_data_hb = connection.json()
-            if conn_data_hb == 'OK':
-                self.status = True
-                self.server_status.publish(conn_data_hb)
-            else:
-                self.status = False
-                self.server_status.publish("Not OK")
-            return self.status
+            self.conn_data_hb = connection.json()            
         except Exception as e:
             self.msg = str(e)
+            rospy.infolog(str(e))
+            self.server_status.publish(self.msg)
             self.error = True
+            return False
+
+        if self.conn_data_hb == 'OK':
+                self.status = True
+                self.server_status.publish(self.conn_data_hb)
+        else:
+            self.status = False
+            self.server_status.publish("Not OK")
+        return self.status
     
     def triggerDrone(self):
         try:

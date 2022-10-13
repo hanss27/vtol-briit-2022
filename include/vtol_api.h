@@ -81,7 +81,7 @@ class VTOLAPI {
     bool conn_state,armed_state,guided_state, manual_state;
     double gps_long, gps_lat,alt,gps_long_trgt, gps_lat_trgt; 
     bool cmd_state;
-    float gps_hdg, pos_x, pos_y, pos_z, alt_trgt;
+    float gps_hdg, pos_x = 0, pos_y = 0, pos_z = 0, alt_trgt;
     std::string mode_state;
 
   private:
@@ -106,7 +106,7 @@ class VTOLAPI {
     ros::ServiceClient set_stream_rate_cli;
     ros::ServiceClient waypoint_pull_cli;
     ros::ServiceClient waypoint_push_cli; 
-
+    ros::ServiceClient command_land_cli;
      // Publisher 
     ros::Publisher setpoint_position_pub;
     ros::Publisher setpoint_velocity_pub;
